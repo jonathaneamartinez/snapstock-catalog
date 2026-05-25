@@ -116,9 +116,10 @@ function CatalogInner({ client }) {
               <a
                 href={`${window.location.pathname}/qr`}
                 title="Ver QR de esta tienda"
-                className="text-xl leading-none hover:scale-110 transition-transform"
+                className="w-8 h-8 flex items-center justify-center rounded-xl hover:scale-110 transition-transform"
+                style={{ color }}
               >
-                📱
+                <QRIcon />
               </a>
             </div>
           </div>
@@ -178,11 +179,22 @@ function CatalogInner({ client }) {
 
         {/* Grilla: 2 cols mobile, crece en pantallas más grandes */}
         {!loading && !error && visible.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
-            {visible.map(card => (
-              <CardItem key={card.id} card={card} color={color} />
-            ))}
-          </div>
+          <>
+            {/* Título instructivo */}
+            <div className="flex items-start gap-2.5 mb-4 px-0.5">
+              <span className="text-lg leading-none mt-0.5">🛍️</span>
+              <p className="text-[13px] text-gray-500 leading-snug">
+                <span className="font-bold text-gray-700">Conocé las cartas de la tienda</span>
+                {' '}y seleccionalas para luego mostrárselas al vendedor
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {visible.map(card => (
+                <CardItem key={card.id} card={card} color={color} />
+              ))}
+            </div>
+          </>
         )}
 
         {!loading && lastUpd && (
@@ -197,5 +209,29 @@ function CatalogInner({ client }) {
       <CartFab onOpen={() => setDrawerOpen(true)} />
       <CartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </div>
+  )
+}
+
+function QRIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5" aria-hidden="true">
+      {/* Top-left square */}
+      <rect x="3"  y="3"  width="4" height="4" rx="0.5"/>
+      <rect x="2"  y="2"  width="7" height="7" rx="1" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+      {/* Top-right square */}
+      <rect x="15" y="3"  width="4" height="4" rx="0.5"/>
+      <rect x="14" y="2"  width="7" height="7" rx="1" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+      {/* Bottom-left square */}
+      <rect x="3"  y="15" width="4" height="4" rx="0.5"/>
+      <rect x="2"  y="14" width="7" height="7" rx="1" fill="none" stroke="currentColor" strokeWidth="1.5"/>
+      {/* Data dots bottom-right area */}
+      <rect x="14" y="14" width="2" height="2" rx="0.3"/>
+      <rect x="17" y="14" width="2" height="2" rx="0.3"/>
+      <rect x="20" y="14" width="2" height="2" rx="0.3"/>
+      <rect x="14" y="17" width="2" height="2" rx="0.3"/>
+      <rect x="17" y="17" width="5" height="2" rx="0.3"/>
+      <rect x="20" y="20" width="2" height="2" rx="0.3"/>
+      <rect x="14" y="20" width="5" height="2" rx="0.3"/>
+    </svg>
   )
 }
