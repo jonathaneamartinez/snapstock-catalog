@@ -3,6 +3,8 @@ import { fetchCatalog } from '../lib/catalog'
 import { normLang } from '../lib/normLang'
 import { translateSetName } from '../lib/setTranslations'
 import { CartProvider } from '../context/CartContext'
+import { useI18n } from '../lib/i18n'
+import { useDarkMode } from '../hooks/useDarkMode'
 import CardItem    from '../components/CardItem'
 import SearchBar   from '../components/SearchBar'
 import Filters     from '../components/Filters'
@@ -32,6 +34,8 @@ export default function Catalog({ client }) {
 
 function CatalogInner({ client }) {
   const { store_id, name, color, emoji, tagline } = client
+  const { t, lang, setLang } = useI18n()
+  const { dark, toggle: toggleDark } = useDarkMode()
 
   const [catalog, setCatalog] = useState([])
   const [loading, setLoading] = useState(true)
@@ -91,10 +95,10 @@ function CatalogInner({ client }) {
   }, [catalog, filters])
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
 
       {/* Header sticky */}
-      <header className="sticky top-0 z-20 bg-white border-b border-gray-100 shadow-sm">
+      <header className="sticky top-0 z-20 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-2.5">
@@ -105,16 +109,35 @@ function CatalogInner({ client }) {
                 {emoji}
               </div>
               <div>
-                <h1 className="text-sm font-black text-gray-900 leading-none">{name}</h1>
-                <p className="text-[11px] text-gray-400 leading-none mt-0.5">{tagline}</p>
+                <h1 className="text-sm font-black text-gray-900 dark:text-gray-100 leading-none">{name}</h1>
+                <p className="text-[11px] text-gray-400 dark:text-gray-500 leading-none mt-0.5">{tagline}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {!loading && (
-                <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
-                  {visible.length} {visible.length === 1 ? 'carta' : 'cartas'}
+                <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2.5 py-1 rounded-full">
+                  {visible.length} {visible.length === 1 ? t('cards_count_one') : t('cards_count_other')}
                 </span>
               )}
+              {/* Lang toggle */}
+              <button
+                onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+                title={lang === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+                className="w-8 h-8 flex items-center justify-center rounded-xl text-base
+                           hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                {lang === 'es' ? '🇦🇷' : '🇺🇸'}
+              </button>
+              {/* Dark mode toggle */}
+              <button
+                onClick={toggleDark}
+                title={dark ? 'Modo claro' : 'Modo oscuro'}
+                className="w-8 h-8 flex items-center justify-center rounded-xl text-base
+                           hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              >
+                {dark ? '☀️' : '🌙'}
+              </button>
+              {/* QR link */}
               <a
                 href={`${window.location.pathname}/qr`}
                 title="Ver QR de esta tienda"
@@ -144,29 +167,29 @@ function CatalogInner({ client }) {
           <div className="flex flex-col items-center justify-center py-24 gap-3">
             <div className="w-10 h-10 border-4 rounded-full animate-spin"
                  style={{ borderColor: `${color}25`, borderTopColor: color }} />
-            <p className="text-sm text-gray-400">Cargando catálogo…</p>
+            <p className="text-sm text-gray-400">{t('loading_catalog')}</p>
           </div>
         )}
 
         {error && (
           <div className="text-center py-24">
             <p className="text-4xl mb-3">😕</p>
-            <p className="text-gray-500 text-sm">No se pudo cargar el catálogo.</p>
-            <p className="text-gray-400 text-xs mt-1">{error}</p>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">{t('catalog_error')}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{error}</p>
           </div>
         )}
 
         {!loading && !error && visible.length === 0 && catalog.length > 0 && (
           <div className="text-center py-24">
             <p className="text-4xl mb-3">🔍</p>
-            <p className="text-gray-700 font-semibold text-sm">Sin resultados</p>
-            <p className="text-gray-400 text-xs mt-1">Probá con otra búsqueda o limpiá los filtros</p>
+            <p className="text-gray-700 dark:text-gray-300 font-semibold text-sm">{t('no_results_title')}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{t('no_results_sub')}</p>
             <button
               onClick={() => setFilters(INIT_FILTERS)}
               className="mt-4 px-4 py-2 rounded-xl text-white text-sm font-semibold hover:opacity-90 transition"
               style={{ backgroundColor: color }}
             >
-              Ver todo el catálogo
+              {t('no_results_btn')}
             </button>
           </div>
         )}
@@ -174,8 +197,8 @@ function CatalogInner({ client }) {
         {!loading && !error && catalog.length === 0 && (
           <div className="text-center py-24">
             <p className="text-4xl mb-3">📦</p>
-            <p className="text-gray-700 font-semibold text-sm">Sin stock disponible</p>
-            <p className="text-gray-400 text-xs mt-1">Volvé a revisar más tarde</p>
+            <p className="text-gray-700 dark:text-gray-300 font-semibold text-sm">{t('no_stock_title')}</p>
+            <p className="text-gray-400 dark:text-gray-500 text-xs mt-1">{t('no_stock_sub')}</p>
           </div>
         )}
 
@@ -185,9 +208,9 @@ function CatalogInner({ client }) {
             {/* Título instructivo */}
             <div className="flex items-start gap-2.5 mb-4 px-0.5">
               <span className="text-lg leading-none mt-0.5">🛍️</span>
-              <p className="text-[13px] text-gray-500 leading-snug">
-                <span className="font-bold text-gray-700">Conocé las cartas de la tienda</span>
-                {' '}y seleccionalas para luego mostrárselas al vendedor
+              <p className="text-[13px] text-gray-500 dark:text-gray-400 leading-snug">
+                <span className="font-bold text-gray-700 dark:text-gray-200">{t('catalog_hint_bold')}</span>
+                {' '}{t('catalog_hint_rest')}
               </p>
             </div>
 
@@ -200,9 +223,9 @@ function CatalogInner({ client }) {
         )}
 
         {!loading && lastUpd && (
-          <p className="text-center text-[10px] text-gray-300 mt-8">
-            Actualizado {lastUpd.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
-            {' · '}Precios en ARS · Powered by SnapStock
+          <p className="text-center text-[10px] text-gray-300 dark:text-gray-600 mt-8">
+            {t('updated_at')} {lastUpd.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+            {' · '}{t('prices_ars')} · {t('powered_by')}
           </p>
         )}
       </main>

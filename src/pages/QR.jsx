@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { getAllClients } from '../clients'
+import { useI18n } from '../lib/i18n'
+import { useDarkMode } from '../hooks/useDarkMode'
 
 const BASE_URL = import.meta.env.VITE_CATALOG_BASE_URL ?? 'https://snapstock-catalog.vercel.app'
 
@@ -13,6 +15,8 @@ const BASE_URL = import.meta.env.VITE_CATALOG_BASE_URL ?? 'https://snapstock-cat
 export default function QR({ client }) {
   const clients = client ? [{ slug: slugFromClient(client), ...client }] : getAllClients()
   const isSingle = !!client
+  const { t, lang, setLang } = useI18n()
+  const { dark, toggle: toggleDark } = useDarkMode()
 
   useEffect(() => {
     document.title = client ? `QR · ${client.name}` : 'QR Codes · SnapStock'
@@ -35,40 +39,61 @@ export default function QR({ client }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
 
       {/* Header */}
-      <header className="bg-white border-b border-gray-100 shadow-sm">
+      <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
           <div>
-            <h1 className="text-sm font-black text-gray-900">
+            <h1 className="text-sm font-black text-gray-900 dark:text-gray-100">
               {client ? `${client.emoji} ${client.name}` : '⚡ SnapStock'}
             </h1>
-            <p className="text-[11px] text-gray-400 mt-0.5">
-              {client ? 'Código QR para tu stand' : 'Códigos QR de todas las tiendas'}
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-0.5">
+              {client ? t('qr_single_subtitle') : t('qr_all_subtitle')}
             </p>
           </div>
 
-          {isSingle ? (
-            /* Vista individual → botón Compartir nativo */
+          <div className="flex items-center gap-2">
+            {/* Lang toggle */}
             <button
-              onClick={handleShare}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200
-                         text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"
-              style={{ borderColor: `${client.color}50`, color: client.color, backgroundColor: `${client.color}08` }}
+              onClick={() => setLang(lang === 'es' ? 'en' : 'es')}
+              title={lang === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-base
+                         hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              <ShareIcon /> Compartir
+              {lang === 'es' ? '🇦🇷' : '🇺🇸'}
             </button>
-          ) : (
-            /* Vista admin → imprimir todos */
+            {/* Dark mode toggle */}
             <button
-              onClick={() => window.print()}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200
-                         text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"
+              onClick={toggleDark}
+              title={dark ? 'Modo claro' : 'Modo oscuro'}
+              className="w-8 h-8 flex items-center justify-center rounded-xl text-base
+                         hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             >
-              🖨️ Imprimir
+              {dark ? '☀️' : '🌙'}
             </button>
-          )}
+
+            {isSingle ? (
+              /* Vista individual → botón Compartir nativo */
+              <button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border
+                           text-xs font-semibold transition"
+                style={{ borderColor: `${client.color}50`, color: client.color, backgroundColor: `${client.color}08` }}
+              >
+                <ShareIcon /> {t('qr_share')}
+              </button>
+            ) : (
+              /* Vista admin → imprimir todos */
+              <button
+                onClick={() => window.print()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-gray-700
+                           text-xs font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
+              >
+                {t('qr_print')}
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -96,6 +121,7 @@ export default function QR({ client }) {
 function QRCard({ client }) {
   const url = `${BASE_URL}/${client.slug}`
   const [copied, setCopied] = useState(false)
+  const { t } = useI18n()
 
   const handleCopy = async () => {
     try {
@@ -106,7 +132,7 @@ function QRCard({ client }) {
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col items-center gap-4">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 flex flex-col items-center gap-4">
 
       {/* Branding */}
       <div className="text-center">
@@ -116,8 +142,8 @@ function QRCard({ client }) {
         >
           {client.emoji}
         </div>
-        <p className="font-black text-gray-900 text-base leading-none">{client.name}</p>
-        <p className="text-xs text-gray-400 mt-1">{client.tagline}</p>
+        <p className="font-black text-gray-900 dark:text-gray-100 text-base leading-none">{client.name}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{client.tagline}</p>
       </div>
 
       {/* QR */}
@@ -137,8 +163,8 @@ function QRCard({ client }) {
 
       {/* URL + botón copiar */}
       <div className="w-full">
-        <p className="text-[11px] text-gray-400 font-medium text-center mb-1.5">
-          Escaneá para ver el catálogo
+        <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium text-center mb-1.5">
+          {t('qr_scan_hint')}
         </p>
         <button
           onClick={handleCopy}
@@ -162,7 +188,7 @@ function QRCard({ client }) {
         </button>
         {copied && (
           <p className="text-[10px] text-center mt-1 font-semibold" style={{ color: client.color }}>
-            ¡Link copiado!
+            {t('qr_copied')}
           </p>
         )}
       </div>
@@ -170,9 +196,9 @@ function QRCard({ client }) {
       {/* Link directo (no-print) */}
       <a
         href={`/${client.slug}`}
-        className="no-print text-xs text-gray-400 hover:text-gray-600 underline transition"
+        className="no-print text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 underline transition"
       >
-        Abrir catálogo →
+        {t('qr_open_catalog')}
       </a>
     </div>
   )

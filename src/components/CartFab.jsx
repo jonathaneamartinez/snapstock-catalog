@@ -1,4 +1,5 @@
 import { useCartContext } from '../context/CartContext'
+import { useI18n } from '../lib/i18n'
 
 /**
  * Botón flotante (bottom-right) que muestra el conteo del carrito.
@@ -6,6 +7,7 @@ import { useCartContext } from '../context/CartContext'
  */
 export default function CartFab({ onOpen }) {
   const { items, color } = useCartContext()
+  const { t } = useI18n()
   if (items.length === 0) return null
 
   return (
@@ -16,7 +18,7 @@ export default function CartFab({ onOpen }) {
                  transition-all duration-200 active:scale-95 hover:opacity-90"
       style={{ backgroundColor: color }}
     >
-      <span>🛍️ Mi lista</span>
+      <span>🛍️ {t('my_list')}</span>
       <span className="bg-white text-xs font-black rounded-xl px-2 py-0.5"
             style={{ color }}>
         {items.length}
