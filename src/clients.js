@@ -17,7 +17,7 @@ export const CLIENTS = {
     ownerNames: ['Sebas', 'Melody'],
     color:      '#3b82f6',   // azul
     emoji:      '⚡',
-    tagline:    'El mejor stock de singles de Uruguay',
+    tagline:    'El mejor stock de singles de Argentina',
   },
 
   'jonat': {
