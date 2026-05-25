@@ -91,12 +91,20 @@ export default function Catalog({ client }) {
                 <p className="text-[11px] text-gray-400 leading-none mt-0.5">{tagline}</p>
               </div>
             </div>
-            {!loading && (
-              <span className="shrink-0 text-xs font-semibold text-gray-400
-                               bg-gray-100 px-2.5 py-1 rounded-full">
-                {visible.length} {visible.length === 1 ? 'carta' : 'cartas'}
-              </span>
-            )}
+            <div className="flex items-center gap-2 shrink-0">
+              {!loading && (
+                <span className="text-xs font-semibold text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">
+                  {visible.length} {visible.length === 1 ? 'carta' : 'cartas'}
+                </span>
+              )}
+              <a
+                href={`${window.location.pathname}/qr`}
+                title="Ver QR de esta tienda"
+                className="text-lg leading-none hover:scale-110 transition-transform"
+              >
+                📱
+              </a>
+            </div>
           </div>
 
           {/* Búsqueda + filtros */}
@@ -164,10 +172,7 @@ export default function Catalog({ client }) {
 
         {/* Grilla de cartas */}
         {!loading && !error && visible.length > 0 && (
-          <div
-            className="grid gap-3"
-            style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}
-          >
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {visible.map(card => (
               <CardItem key={card.id} card={card} color={color} />
             ))}
