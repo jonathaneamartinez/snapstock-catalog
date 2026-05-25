@@ -1,3 +1,5 @@
+import { translateSetName } from '../lib/setTranslations'
+
 const LANG_OPTIONS = [
   { code: '',   label: 'Todos los idiomas' },
   { code: 'en', label: '🇬🇧 Inglés'    },
@@ -48,7 +50,7 @@ export default function Filters({ sets, filters, onChange, color = '#3b82f6', av
           style={activeStyle(!!filters.set)}
         >
           <option value="">Todos los sets</option>
-          {sets.map(s => <option key={s} value={s}>{s}</option>)}
+          {sets.map(s => <option key={s} value={s}>{translateSetName(s)}</option>)}
         </select>
         <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">▾</span>
       </div>

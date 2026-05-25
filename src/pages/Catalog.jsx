@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { fetchCatalog } from '../lib/catalog'
 import { normLang } from '../lib/normLang'
+import { translateSetName } from '../lib/setTranslations'
 import { CartProvider } from '../context/CartContext'
 import CardItem    from '../components/CardItem'
 import SearchBar   from '../components/SearchBar'
@@ -80,8 +81,9 @@ function CatalogInner({ client }) {
     if (filters.search) {
       const q = filters.search.toLowerCase()
       list = list.filter(c =>
-        c.nombre?.toLowerCase().includes(q)     ||
-        c.set_name?.toLowerCase().includes(q)   ||
+        c.nombre?.toLowerCase().includes(q)                           ||
+        c.set_name?.toLowerCase().includes(q)                         ||
+        translateSetName(c.set_name)?.toLowerCase().includes(q)       ||
         c.card_number?.toLowerCase().includes(q)
       )
     }
