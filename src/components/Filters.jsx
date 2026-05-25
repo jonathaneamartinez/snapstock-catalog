@@ -16,8 +16,16 @@ const SORT_OPTIONS = [
   { value: 'set_asc',    label: 'Por set'   },
 ]
 
-export default function Filters({ sets, filters, onChange, color = '#3b82f6' }) {
+export default function Filters({ sets, filters, onChange, color = '#3b82f6', availableLangs = [] }) {
   const sel = (k, v) => onChange({ ...filters, [k]: v })
+
+  // Solo muestra idiomas que realmente tienen cartas en este catálogo
+  const langOptions = [
+    LANG_OPTIONS[0], // "Todos los idiomas"
+    ...LANG_OPTIONS.slice(1).filter(o =>
+      availableLangs.length === 0 || availableLangs.includes(o.code)
+    ),
+  ]
 
   const selectCls = (active) =>
     `appearance-none border rounded-xl pl-3 pr-7 py-2.5 text-sm bg-white
@@ -53,7 +61,7 @@ export default function Filters({ sets, filters, onChange, color = '#3b82f6' }) 
           className={selectCls(!!filters.lang)}
           style={activeStyle(!!filters.lang)}
         >
-          {LANG_OPTIONS.map(o => <option key={o.code} value={o.code}>{o.label}</option>)}
+          {langOptions.map(o => <option key={o.code} value={o.code}>{o.label}</option>)}
         </select>
         <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-gray-400">▾</span>
       </div>

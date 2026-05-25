@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { fetchCatalog } from '../lib/catalog'
+import { normLang } from '../lib/normLang'
 import { CartProvider } from '../context/CartContext'
 import CardItem    from '../components/CardItem'
 import SearchBar   from '../components/SearchBar'
@@ -51,27 +52,37 @@ function CatalogInner({ client }) {
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color)
   }, [name, color])
 
-  const sets = useMemo(
-    () => [...new Set(catalog.map(c => c.set_name).filter(Boolean))].sort(),
+  // Sets disponibles para el idioma seleccionado (cascada: lang → sets)
+  const sets = useMemo(() => {
+    const base = filters.lang
+      ? catalog.filter(c => normLang(c.language) === normLang(filters.lang))
+      : catalog
+    return [...new Set(base.map(c => c.set_name).filter(Boolean))].sort()
+  }, [catalog, filters.lang])
+
+  // Idiomas que realmente tienen cartas en este catálogo
+  const availableLangs = useMemo(
+    () => [...new Set(catalog.map(c => normLang(c.language)).filter(Boolean))],
     [catalog]
   )
 
+  // Si el set activo ya no pertenece al idioma seleccionado, lo resetea
+  useEffect(() => {
+    if (filters.set && !sets.includes(filters.set)) {
+      setFilters(f => ({ ...f, set: '' }))
+    }
+  }, [sets])  // eslint-disable-line react-hooks/exhaustive-deps
+
   const visible = useMemo(() => {
     let list = catalog
-    if (filters.set) list = list.filter(c => c.set_name === filters.set)
-    if (filters.lang) {
-      const norm = { jp: 'ja', cn: 'zh' }
-      const target = norm[filters.lang] ?? filters.lang
-      list = list.filter(c => {
-        const lang = c.language ?? 'en'
-        return (norm[lang] ?? lang) === target
-      })
-    }
+    if (filters.lang) list = list.filter(c => normLang(c.language) === normLang(filters.lang))
+    if (filters.set)  list = list.filter(c => c.set_name === filters.set)
     if (filters.search) {
       const q = filters.search.toLowerCase()
       list = list.filter(c =>
-        c.nombre?.toLowerCase().includes(q) ||
-        c.set_name?.toLowerCase().includes(q)
+        c.nombre?.toLowerCase().includes(q)     ||
+        c.set_name?.toLowerCase().includes(q)   ||
+        c.card_number?.toLowerCase().includes(q)
       )
     }
     return applySort(list, filters.sort)
@@ -118,7 +129,7 @@ function CatalogInner({ client }) {
               onChange={v => setFilters(f => ({ ...f, search: v }))}
               color={color}
             />
-            <Filters sets={sets} filters={filters} onChange={setFilters} color={color} />
+            <Filters sets={sets} filters={filters} onChange={setFilters} color={color} availableLangs={availableLangs} />
           </div>
         </div>
       </header>
