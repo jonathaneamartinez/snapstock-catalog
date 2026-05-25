@@ -1,10 +1,13 @@
-import { supabase, STORE_ID } from './supabase'
+import { supabase } from './supabase'
 
 /**
- * Trae todo el stock disponible del store con datos de la carta.
- * Ordena por nombre de carta.
+ * Trae todo el stock disponible de un store, con datos de la carta.
+ * @param {string} storeId — UUID del store
+ * @returns {Promise<Array>}
  */
-export async function fetchCatalog() {
+export async function fetchCatalog(storeId) {
+  if (!storeId) throw new Error('storeId requerido')
+
   const { data, error } = await supabase
     .from('inventory')
     .select(`
@@ -21,14 +24,13 @@ export async function fetchCatalog() {
         image_url
       )
     `)
-    .eq('store_id', STORE_ID)
+    .eq('store_id', storeId)
     .eq('status', 'disponible')
     .gt('quantity', 0)
     .not('sale_price_ars', 'is', null)
 
   if (error) throw error
 
-  // Flatten + sort client-side por nombre
   return (data ?? [])
     .filter(row => row.cards)
     .map(row => ({
