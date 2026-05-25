@@ -1,8 +1,11 @@
 import { useState, useEffect, useMemo } from 'react'
 import { fetchCatalog } from '../lib/catalog'
-import CardItem  from '../components/CardItem'
-import SearchBar from '../components/SearchBar'
-import Filters   from '../components/Filters'
+import { CartProvider } from '../context/CartContext'
+import CardItem    from '../components/CardItem'
+import SearchBar   from '../components/SearchBar'
+import Filters     from '../components/Filters'
+import CartFab     from '../components/CartFab'
+import CartDrawer  from '../components/CartDrawer'
 
 const INIT_FILTERS = { set: '', lang: '', sort: 'name_asc', search: '' }
 
@@ -18,6 +21,14 @@ function applySort(list, sort) {
 }
 
 export default function Catalog({ client }) {
+  return (
+    <CartProvider storeId={client.store_id} color={client.color}>
+      <CatalogInner client={client} />
+    </CartProvider>
+  )
+}
+
+function CatalogInner({ client }) {
   const { store_id, name, color, emoji, tagline } = client
 
   const [catalog, setCatalog] = useState([])
@@ -25,21 +36,19 @@ export default function Catalog({ client }) {
   const [error,   setError]   = useState(null)
   const [filters, setFilters] = useState(INIT_FILTERS)
   const [lastUpd, setLastUpd] = useState(null)
+  const [drawerOpen, setDrawerOpen] = useState(false)
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
+    setLoading(true); setError(null)
     fetchCatalog(store_id)
       .then(data => { setCatalog(data); setLastUpd(new Date()) })
       .catch(err  => setError(err.message))
       .finally(() => setLoading(false))
   }, [store_id])
 
-  // Actualiza el título de la pestaña
   useEffect(() => {
     document.title = `${name} · Catálogo`
-    document.querySelector('meta[name="theme-color"]')
-      ?.setAttribute('content', color)
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', color)
   }, [name, color])
 
   const sets = useMemo(
@@ -68,21 +77,17 @@ export default function Catalog({ client }) {
     return applySort(list, filters.sort)
   }, [catalog, filters])
 
-  const accentRing = `2px solid ${color}40`
-
   return (
     <div className="min-h-screen bg-gray-50">
 
       {/* Header sticky */}
       <header className="sticky top-0 z-20 bg-white border-b border-gray-100 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 py-3">
-
-          {/* Título */}
           <div className="flex items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-2.5">
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-bold shrink-0"
-                style={{ backgroundColor: `${color}18`, border: accentRing }}
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0"
+                style={{ backgroundColor: `${color}18`, border: `2px solid ${color}40` }}
               >
                 {emoji}
               </div>
@@ -100,34 +105,27 @@ export default function Catalog({ client }) {
               <a
                 href={`${window.location.pathname}/qr`}
                 title="Ver QR de esta tienda"
-                className="text-lg leading-none hover:scale-110 transition-transform"
+                className="text-xl leading-none hover:scale-110 transition-transform"
               >
                 📱
               </a>
             </div>
           </div>
 
-          {/* Búsqueda + filtros */}
           <div className="flex flex-col gap-2">
             <SearchBar
               value={filters.search}
               onChange={v => setFilters(f => ({ ...f, search: v }))}
               color={color}
             />
-            <Filters
-              sets={sets}
-              filters={filters}
-              onChange={setFilters}
-              color={color}
-            />
+            <Filters sets={sets} filters={filters} onChange={setFilters} color={color} />
           </div>
         </div>
       </header>
 
       {/* Contenido */}
-      <main className="max-w-5xl mx-auto px-4 py-5">
+      <main className="max-w-5xl mx-auto px-4 py-5 pb-28">
 
-        {/* Loading */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-24 gap-3">
             <div className="w-10 h-10 border-4 rounded-full animate-spin"
@@ -136,7 +134,6 @@ export default function Catalog({ client }) {
           </div>
         )}
 
-        {/* Error */}
         {error && (
           <div className="text-center py-24">
             <p className="text-4xl mb-3">😕</p>
@@ -145,7 +142,6 @@ export default function Catalog({ client }) {
           </div>
         )}
 
-        {/* Sin resultados */}
         {!loading && !error && visible.length === 0 && catalog.length > 0 && (
           <div className="text-center py-24">
             <p className="text-4xl mb-3">🔍</p>
@@ -153,7 +149,7 @@ export default function Catalog({ client }) {
             <p className="text-gray-400 text-xs mt-1">Probá con otra búsqueda o limpiá los filtros</p>
             <button
               onClick={() => setFilters(INIT_FILTERS)}
-              className="mt-4 px-4 py-2 rounded-xl text-white text-sm font-semibold transition hover:opacity-90"
+              className="mt-4 px-4 py-2 rounded-xl text-white text-sm font-semibold hover:opacity-90 transition"
               style={{ backgroundColor: color }}
             >
               Ver todo el catálogo
@@ -161,7 +157,6 @@ export default function Catalog({ client }) {
           </div>
         )}
 
-        {/* Vacío real */}
         {!loading && !error && catalog.length === 0 && (
           <div className="text-center py-24">
             <p className="text-4xl mb-3">📦</p>
@@ -170,7 +165,7 @@ export default function Catalog({ client }) {
           </div>
         )}
 
-        {/* Grilla de cartas */}
+        {/* Grilla: 2 cols mobile, crece en pantallas más grandes */}
         {!loading && !error && visible.length > 0 && (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
             {visible.map(card => (
@@ -179,14 +174,17 @@ export default function Catalog({ client }) {
           </div>
         )}
 
-        {/* Footer */}
         {!loading && lastUpd && (
-          <p className="text-center text-[10px] text-gray-300 mt-8 pb-6">
+          <p className="text-center text-[10px] text-gray-300 mt-8">
             Actualizado {lastUpd.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
             {' · '}Precios en ARS · Powered by SnapStock
           </p>
         )}
       </main>
+
+      {/* Carrito flotante */}
+      <CartFab onOpen={() => setDrawerOpen(true)} />
+      <CartDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
     </div>
   )
 }

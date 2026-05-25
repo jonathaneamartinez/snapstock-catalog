@@ -1,3 +1,5 @@
+import { useCartContext } from '../context/CartContext'
+
 const LANG_FLAG = {
   en: '🇬🇧', ja: '🇯🇵', jp: '🇯🇵',
   zh: '🇨🇳', cn: '🇨🇳', es: '🇪🇸',
@@ -22,31 +24,57 @@ export default function CardItem({ card, color = '#3b82f6' }) {
   const flag    = LANG_FLAG[language] ?? ''
   const condCls = COND_COLOR[condicion] ?? 'bg-gray-100 text-gray-600'
 
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden
-                    flex flex-col hover:shadow-md hover:-translate-y-0.5 transition-all duration-150">
+  const { isInCart, toggle } = useCartContext()
+  const inCart = isInCart(card.id)
 
+  return (
+    <div
+      className={`bg-white rounded-2xl shadow-sm border overflow-hidden
+                  flex flex-col transition-all duration-150
+                  hover:shadow-md hover:-translate-y-0.5
+                  ${inCart ? 'ring-2' : 'border-gray-100'}`}
+      style={inCart ? { ringColor: color, borderColor: color, boxShadow: `0 0 0 2px ${color}` } : {}}
+    >
       {/* Imagen */}
       <div className="relative bg-gradient-to-b from-gray-50 to-gray-100
                       flex items-center justify-center p-2 pt-3">
+
+        {/* Badge cantidad en stock */}
         {quantity > 1 && (
-          <span className="absolute top-2 right-2 text-white text-[10px] font-bold
+          <span className="absolute top-2 left-2 text-white text-[10px] font-bold
                            px-1.5 py-0.5 rounded-full leading-none z-10"
                 style={{ backgroundColor: color }}>
             x{quantity}
           </span>
         )}
+
+        {/* Botón agregar/quitar carrito */}
+        <button
+          onClick={() => toggle(card)}
+          className="absolute top-2 right-2 z-10 w-7 h-7 rounded-full flex items-center justify-center
+                     text-sm font-black shadow-sm transition-all duration-150 active:scale-90"
+          style={inCart
+            ? { backgroundColor: color, color: 'white' }
+            : { backgroundColor: 'white', color: '#9ca3af', border: '1.5px solid #e5e7eb' }
+          }
+          title={inCart ? 'Quitar de la lista' : 'Agregar a la lista'}
+        >
+          {inCart ? '✓' : '+'}
+        </button>
+
         {image_url ? (
           <img
             src={image_url}
             alt={nombre}
             loading="lazy"
-            className="w-full max-w-[140px] rounded-xl object-contain drop-shadow-md"
+            onClick={() => toggle(card)}
+            className="w-full max-w-[140px] rounded-xl object-contain drop-shadow-md cursor-pointer"
             style={{ aspectRatio: '5/7' }}
           />
         ) : (
           <div
-            className="w-full max-w-[140px] rounded-xl flex items-center justify-center bg-gray-100"
+            className="w-full max-w-[140px] rounded-xl flex items-center justify-center bg-gray-100 cursor-pointer"
+            onClick={() => toggle(card)}
             style={{ aspectRatio: '5/7' }}
           >
             <span className="text-3xl">🃏</span>
@@ -66,7 +94,7 @@ export default function CardItem({ card, color = '#3b82f6' }) {
           <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${condCls}`}>
             {condicion}
           </span>
-          <span className="text-base font-black text-gray-900">
+          <span className="text-sm font-black text-gray-900">
             {fmtARS(precio_ars)}
           </span>
         </div>
